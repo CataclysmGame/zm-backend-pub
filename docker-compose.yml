@@ -1,0 +1,54 @@
+version: '3.7'
+services:
+  postgres:
+    container_name: postgres_container
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+
+  redis:
+    container_name: redis_container
+    image: redis
+    restart: always
+    volumes:
+      - redis:/data/redis
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cataclysm_api_container
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "7073:7073"
+    environment:
+      PORT: 7073
+      PYTHONBUFFERED: 1
+      DB_URL: "postgresql+psycopg2://postgres:postgres@postgres:5432/cataclysm-zm"
+      CACHE_URL: "redis://redis:6379/0"
+    depends_on:
+      - redis
+      - postgres
+    healthcheck:
+      test: curl --fail -s localhost:7073/api/v1/health || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  nftf:
+
+volumes:
+  postgres:
+  redis:

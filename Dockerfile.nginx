@@ -1,0 +1,10 @@
+FROM nginx
+
+RUN rm /etc/nginx/conf.d/default.conf
+
+RUN mkdir -p /certs
+
+COPY ./certs/fullchain.pem /certs/fullchain.pem
+COPY ./certs/privkey.pem /certs/privkey.pem
+
+COPY ./etc/nginx.conf /etc/nginx/conf.d/default.conf
